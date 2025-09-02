@@ -1,0 +1,360 @@
+// import React, { useState, useEffect, useMemo } from "react";
+// import MenuTable from "../../../Components/Menu/MenuTable";
+// import DeleteConfirmationModal from "../../../Components/DeleteConfirmationModal/DeleteConfirmationModal";
+// import { FaEdit, FaCheck } from "react-icons/fa";
+// import { IoClose } from "react-icons/io5";
+// import { CheckCircle, XCircle } from "lucide-react";
+// import { useNavigate } from "react-router-dom";
+// import axios from "axios";
+
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// const StatusBadge = ({ isActive }) => {
+//   const text = isActive ? "Active" : "Inactive";
+//   const classes = isActive
+//     ? "bg-green-100 text-green-800"
+//     : "bg-red-100 text-red-800";
+
+//   return (
+//     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${classes}`}>
+//       {text}
+//     </span>
+//   );
+// };
+
+// const VideoGalaryList = () => {
+//   const [videoItems, setVideoItems] = useState([]);
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+//   const [selectedItem, setSelectedItem] = useState(null);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     fetchVideos();
+//   }, []);
+
+//   const fetchVideos = async () => {
+//     try {
+//       const res = await axios.get(`${API_BASE_URL}/image-setup/all-videos`, {
+//         withCredentials: true,
+//       });
+
+//       if (res.data.success) {
+//         const videos = res.data.videos.map((video) => ({
+//           id: video.id,
+//           category: video.category?.category_en || "N/A",
+//           title_en: video.title_en,
+//           title_od: video.title_od,
+//           videoUrl: video.video_url || "",
+//           isActive: video.status !== undefined ? video.status : true,
+//         }));
+//         setVideoItems(videos);
+//       } else {
+//         console.error("Failed to fetch videos:", res.data.message);
+//       }
+//     } catch (error) {
+//       console.error("Error fetching videos:", error);
+//     }
+//   };
+
+//   const openModal = (item) => {
+//     setSelectedItem(item);
+//     setIsModalOpen(true);
+//   };
+
+//   const closeModal = () => {
+//     setSelectedItem(null);
+//     setIsModalOpen(false);
+//   };
+
+//   const handleToggleStatus = async () => {
+//     if (!selectedItem) return;
+
+//     try {
+//       const res = await axios.patch(
+//         `${API_BASE_URL}/image-setup/toggle-video-status/${selectedItem.id}`,
+//         null,
+//         { withCredentials: true }
+//       );
+
+//       if (res.data.success) {
+//         setVideoItems((prev) =>
+//           prev.map((item) =>
+//             item.id === selectedItem.id
+//               ? { ...item, isActive: !item.isActive }
+//               : item
+//           )
+//         );
+//         closeModal();
+//       } else {
+//         console.error("Failed to toggle video status:", res.data.message);
+//       }
+//     } catch (error) {
+//       console.error("Toggle status error:", error);
+//     }
+//   };
+
+//   const videoColumns = useMemo(
+//     () => [
+//       {
+//         header: "SL.No",
+//         cell: ({ index }) => index + 1,
+//       },
+//       {
+//         header: "Category",
+//         accessor: "category",
+//       },
+//       {
+//         header: "Title (In English)",
+//         accessor: "title_en",
+//       },
+//       {
+//         header: "Title (In Odia)",
+//         accessor: "title_od",
+//       },
+//       {
+//         header: "Video",
+//         accessor: "videoUrl",
+//         cell: ({ row }) => {
+//           const videoSrc = row.original.videoUrl?.replace(/\\/g, "/");
+//           return videoSrc ? (
+//             <video
+//               src={videoSrc}
+//               muted
+//               loop
+//               controls
+//               className="h-32 w-48 object-cover rounded shadow"
+//             />
+//           ) : (
+//             <div className="text-gray-500">No Video</div>
+//           );
+//         },
+//       },
+
+//       {
+//         header: "Status",
+//         accessor: "isActive",
+//         cell: ({ row }) => <StatusBadge isActive={row.original.isActive} />,
+//       },
+//       {
+//         header: "Actions",
+//         cell: ({ row }) => (
+//           <div className="flex items-center space-x-3">
+//             <button
+//               onClick={() =>
+//                 navigate(`/admin/image-setup/video-galary/edit/${row.original.id}`)
+//               }
+//               className="text-blue-600 hover:text-blue-800 transition"
+//               title="Edit Video"
+//             >
+//               <FaEdit />
+//             </button>
+//             <button
+//               onClick={() => openModal(row.original)}
+//               title={row.original.isActive ? "Deactivate Video" : "Activate Video"}
+//             >
+//               {row.original.isActive ? (
+//                 <IoClose className="text-red-600" />
+//               ) : (
+//                 <FaCheck className="text-green-600" />
+//               )}
+//             </button>
+//           </div>
+//         ),
+//       },
+//     ],
+//     [navigate]
+//   );
+
+//   return (
+//     <div className="p-6 min-h-[80vh] font-sans">
+//       <MenuTable
+//         Ltext="Video Gallery"
+//         Rtext="Add Video"
+//         data={videoItems}
+//         columns={videoColumns}
+//         addPath="add"
+//       />
+
+//       {isModalOpen && selectedItem && (
+//         <DeleteConfirmationModal
+//           onClose={closeModal}
+//           onConfirm={handleToggleStatus}
+//           title={"Change Status"}
+//           message={`Are you sure you want to ${selectedItem.isActive ? "deactivate" : "activate"
+//             } "${selectedItem.title_en}"?`}
+//           icon={selectedItem.isActive ? XCircle : CheckCircle}
+//           confirmText={"Yes"}
+//           cancelText="Cancel"
+//         />
+//       )}
+//     </div>
+//   );
+// };
+
+// export default VideoGalaryList;
+
+
+import React, { useState, useMemo, useCallback } from "react";
+import axios from "axios";
+import { FaEdit, FaCheck } from "react-icons/fa";
+import { IoClose } from "react-icons/io5";
+import { CheckCircle, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import MenuTable from "../../../Components/Menu/MenuTable";
+import DeleteConfirmationModal from "../../../Components/DeleteConfirmationModal/DeleteConfirmationModal";
+import { useServerSideTable } from "../../../hooks/useServerSideTable";
+import { useModal } from "../../../context/ModalProvider";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const StatusBadge = ({ isActive }) => {
+  const text = isActive ? "Active" : "Inactive";
+  const classes = isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+  return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${classes}`}>{text}</span>;
+};
+
+const VideoGalaryList = () => {
+  const navigate = useNavigate();
+  const { showModal } = useModal();
+  
+  const {
+    data: videoItems,
+    setData,
+    tableState,
+  } = useServerSideTable(`${API_BASE_URL}/image-setup/all-videos`);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const openModal = (item) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedItem(null);
+    setIsModalOpen(false);
+  };
+
+  const handleToggleStatus = useCallback(async () => {
+    if (!selectedItem) return;
+    try {
+      const res = await axios.patch(
+        `${API_BASE_URL}/image-setup/toggle-video-status/${selectedItem.id}`,
+        null,
+        { withCredentials: true }
+      );
+      
+      const updatedItem = res.data.video;
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === updatedItem.id ? { ...item, status: updatedItem.status } : item
+        )
+      );
+      showModal("success", res.data.message);
+    } catch (error) {
+      showModal("error", "Failed to toggle status.");
+    } finally {
+      closeModal();
+    }
+  }, [selectedItem, setData, showModal]);
+
+  const videoColumns = useMemo(
+    () => [
+      {
+        header: "SL.No",
+        cell: ({ index }) => (tableState.currentPage - 1) * tableState.entriesPerPage + index + 1,
+      },
+      {
+        header: "Category",
+        accessor: "category_name",
+        isSearchable: true,
+        isSortable: true,
+      },
+      {
+        header: "Title (English)",
+        accessor: "title_en",
+        isSearchable: true,
+        isSortable: true,
+      },
+      {
+        header: "Title (Odia)",
+        accessor: "title_od",
+        isSearchable: true,
+        isSortable: true,
+      },
+      {
+        header: "Video",
+        accessor: "video_url",
+        cell: ({ row }) => {
+          const videoSrc = row.original.video_url;
+          return videoSrc ? (
+            <video
+              src={videoSrc}
+              controls
+              className="h-24 w-40 object-cover rounded shadow bg-black"
+            />
+          ) : (
+            <div className="text-gray-500 text-xs">No Video</div>
+          );
+        },
+      },
+      {
+        header: "Status",
+        accessor: "status",
+        isSortable: true,
+        cell: ({ row }) => <StatusBadge isActive={row.original.status} />,
+      },
+      {
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex items-center space-x-3">
+               <button
+              onClick={() => openModal(row.original)}
+              className={row.original.status ? "text-red-600" : "text-green-600"}
+              title={row.original.status ? "Deactivate Video" : "Activate Video"}>
+              {row.original.status ? <IoClose /> : <FaCheck />}
+            </button>
+            <button
+              onClick={() => navigate(`/admin/image-setup/video-galary/edit/${row.original.id}`)}
+              className="text-blue-600 hover:text-blue-800 transition"
+              title="Edit Video">
+              <FaEdit />
+            </button>
+         
+          </div>
+        ),
+      },
+    ],
+    [navigate, tableState.currentPage, tableState.entriesPerPage]
+  );
+
+  return (
+    <div className="p-6 min-h-[80vh] font-sans">
+      <MenuTable
+        Ltext="Video Gallery"
+        Rtext="Add Video"
+        data={videoItems}
+        columns={videoColumns}
+        addPath="add"
+        tableState={tableState}
+      />
+
+      {isModalOpen && selectedItem && (
+        <DeleteConfirmationModal
+          onClose={closeModal}
+          onConfirm={handleToggleStatus}
+          title={"Change Status"}
+          message={`Are you sure you want to ${
+            selectedItem.status ? "deactivate" : "activate"
+          } "${selectedItem.title_en}"?`}
+          icon={selectedItem.status ? XCircle : CheckCircle}
+          confirmText={"Yes"}
+          cancelText="Cancel"
+        />
+      )}
+    </div>
+  );
+};
+
+export default VideoGalaryList;
